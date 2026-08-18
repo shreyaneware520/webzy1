@@ -91,6 +91,39 @@ input:focus-visible {
   background-clip: text;
 }
 
+/* ── Outline "Hollow" Text ── */
+.text-outline-glow {
+  -webkit-text-stroke: 1.5px var(--warm-gold);
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  position: relative;
+  transition: all 0.5s var(--ease-premium);
+}
+.text-outline-glow:hover {
+  -webkit-text-fill-color: rgba(201, 162, 74, 0.15);
+  text-shadow: 0 0 20px rgba(201, 162, 74, 0.3);
+}
+
+/* ── Glass Pill ── */
+.glass-pill {
+  background: rgba(9, 7, 8, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 162, 74, 0.2);
+  border-radius: 999px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s var(--ease-premium), border-color 0.4s, background 0.4s;
+}
+.glass-pill:hover {
+  transform: translateY(-4px);
+  border-color: rgba(201, 162, 74, 0.5);
+  background: rgba(26, 8, 13, 0.6);
+}
+
 /* ── Layout & Structure ── */
 .container {
   max-width: 1280px;
@@ -585,6 +618,16 @@ body.modal-open {
   50%  { transform: scale(1.35); }
   100% { transform: scale(1); }
 }
+@keyframes sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+@keyframes particleDrift {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  20%  { opacity: 0.8; }
+  80%  { opacity: 0.5; }
+  100% { transform: translateY(-120px) translateX(40px) scale(0.5); opacity: 0; }
+}
 
 /* ── Animation helpers ── */
 .anim-fade-up   { animation: fadeInUp 0.8s var(--ease-premium) both; }
@@ -597,6 +640,7 @@ body.modal-open {
 .anim-bounce    { animation: bounce 2.2s ease-in-out infinite; }
 .anim-spin      { animation: spin 1s linear infinite; }
 .anim-badge-pop { animation: cartBadgePop 0.35s var(--ease-premium); }
+.anim-sway      { animation: sway 6s ease-in-out infinite; transform-origin: top center; }
 
 canvas { display: block; }
 

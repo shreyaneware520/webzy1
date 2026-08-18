@@ -31,12 +31,33 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #090708 0%, #1A080D 40%, #090708 100%)',
+        background: 'linear-gradient(135deg, rgba(9,7,8,0.85) 0%, rgba(26,8,13,0.7) 100%), url(/hero-bg.png) center/cover no-repeat',
         overflow: 'hidden',
         paddingTop: 88,
         paddingBottom: 40,
       }}
     >
+      {/* ── Floating Particles ── */}
+      {[...Array(20)].map((_, i) => (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            width: Math.random() * 4 + 2 + 'px',
+            height: Math.random() * 4 + 2 + 'px',
+            background: 'var(--warm-gold)',
+            borderRadius: '50%',
+            top: Math.random() * 100 + '%',
+            left: Math.random() * 100 + '%',
+            opacity: 0,
+            animation: 'particleDrift 10s linear infinite',
+            animationDelay: Math.random() * 10 + 's',
+            animationDuration: Math.random() * 10 + 10 + 's',
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+
       {/* ── Background Ambient Glows & Grid ── */}
       <div
         style={{
@@ -156,7 +177,7 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
         <div style={{ width: 2, height: 35, background: '#120808', margin: '0 auto' }} />
         {/* Lantern Body */}
         <div
-          className="anim-glow-white"
+          className="anim-glow-white anim-sway"
           style={{
             width: 44,
             height: 44,
@@ -194,7 +215,7 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
         <div style={{ width: 2, height: 30, background: '#120808', margin: '0 auto' }} />
         {/* Lantern Body */}
         <div
-          className="anim-glow-red"
+          className="anim-glow-red anim-sway"
           style={{
             width: 48,
             height: 86,
@@ -298,7 +319,7 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
               }}
             >
               A BOWL OF <br />
-              <span className="gold-text" style={{ display: 'inline-block' }}>
+              <span className="text-outline-glow" style={{ display: 'inline-block' }}>
                 SEOUL.
               </span>
             </h1>
@@ -331,47 +352,36 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
             <div
               style={{
                 display: 'flex',
+                gap: 16,
                 paddingTop: 32,
-                borderTop: '1px solid rgba(158, 22, 43, 0.25)',
+                flexWrap: 'wrap',
               }}
             >
               {STATS.map((s, i) => (
-                <React.Fragment key={s.label}>
-                  {i > 0 && (
-                    <div
-                      style={{
-                        width: 1.5,
-                        background: 'rgba(158, 22, 43, 0.25)',
-                        margin: '0 24px',
-                      }}
-                    />
-                  )}
-                  <div>
-                    <div
-                      className="font-serif"
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 800,
-                        color: 'var(--warm-gold)',
-                        lineHeight: 1,
-                      }}
-                    >
-                      {s.value}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 9,
-                        letterSpacing: '0.15em',
-                        color: 'rgba(245, 235, 221, 0.45)',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        marginTop: 6,
-                      }}
-                    >
-                      {s.label}
-                    </div>
+                <div key={s.label} className="glass-pill anim-fade-up" style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
+                  <div
+                    className="font-serif"
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 800,
+                      color: 'var(--warm-gold)',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {s.value}
                   </div>
-                </React.Fragment>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: '0.15em',
+                      color: 'rgba(245, 235, 221, 0.65)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {s.label}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
