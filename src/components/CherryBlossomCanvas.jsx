@@ -6,13 +6,23 @@ export default function CherryBlossomCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Respect prefers-reduced-motion
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (motionQuery.matches) return;
+
     const ctx = canvas.getContext('2d');
     let animationFrameId;
+    let isVisible = true;
 
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    const petalCount = Math.min(Math.floor(width / 30), 45); // Adjust density based on screen size
+    // Fewer petals on mobile for performance
+    const isMobile = width < 768;
+    const petalCount = isMobile
+      ? Math.min(Math.floor(width / 50), 18)
+      : Math.min(Math.floor(width / 30), 40);
     const petals = [];
 
     // Helper to create a single petal
@@ -66,6 +76,11 @@ export default function CherryBlossomCanvas() {
     };
 
     const update = () => {
+      if (!isVisible) {
+        animationFrameId = requestAnimationFrame(update);
+        return;
+      }
+
       ctx.clearRect(0, 0, width, height);
 
       for (let i = 0; i < petals.length; i++) {
@@ -92,18 +107,29 @@ export default function CherryBlossomCanvas() {
       height = canvas.height = window.innerHeight;
     };
 
+    // IntersectionObserver to pause when not visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        isVisible = entries[0].isIntersecting;
+      },
+      { threshold: 0 }
+    );
+    observer.observe(canvas);
+
     window.addEventListener('resize', handleResize);
     update();
 
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       style={{
         position: 'fixed',
         top: 0,

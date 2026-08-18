@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Plus, Check } from 'lucide-react';
 
 export default function AddOnCard({ item, onAddToOrder }) {
   const isVeg = item.category === 'veg';
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = useCallback((e) => {
+    e.stopPropagation();
+    onAddToOrder(item);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  }, [item, onAddToOrder]);
 
   return (
     <div
@@ -43,6 +52,11 @@ export default function AddOnCard({ item, onAddToOrder }) {
           border: '1px solid rgba(158, 22, 43, 0.15)',
         }}
       >
+        {/* Skeleton */}
+        {!imgLoaded && !imgError && (
+          <div className="skeleton" style={{ position: 'absolute', inset: 0 }} />
+        )}
+
         {imgError ? (
           <div
             style={{
@@ -60,12 +74,15 @@ export default function AddOnCard({ item, onAddToOrder }) {
           <img
             src={item.image}
             alt={item.name}
+            loading="lazy"
+            onLoad={() => setImgLoaded(true)}
             onError={() => setImgError(true)}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              transition: 'transform 0.5s var(--ease-premium)',
+              transition: 'transform 0.5s var(--ease-premium), opacity 0.5s ease',
+              opacity: imgLoaded ? 1 : 0,
             }}
           />
         )}
@@ -137,31 +154,38 @@ export default function AddOnCard({ item, onAddToOrder }) {
             ₹{item.price}
           </span>
           <button
-            onClick={() => onAddToOrder(item)}
+            onClick={handleAdd}
             aria-label={`Add ${item.name}`}
             style={{
-              width: 32,
-              height: 32,
-              background: 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
+              width: 44,
+              height: 44,
+              background: added
+                ? 'var(--green)'
+                : 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
               border: 'none',
-              borderRadius: 10,
+              borderRadius: 12,
               cursor: 'pointer',
               color: 'var(--soft-cream)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.3s var(--ease-premium)',
+              boxShadow: added
+                ? '0 4px 12px rgba(34, 197, 94, 0.4)'
+                : '0 4px 12px rgba(158, 22, 43, 0.35)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.filter = 'brightness(1.25)';
-              e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)';
+              if (!added) {
+                e.currentTarget.style.filter = 'brightness(1.25)';
+                e.currentTarget.style.transform = 'scale(1.1)';
+              }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.filter = 'none';
               e.currentTarget.style.transform = 'none';
             }}
           >
-            <Plus size={14} />
+            {added ? <Check size={16} /> : <Plus size={16} />}
           </button>
         </div>
       </div>

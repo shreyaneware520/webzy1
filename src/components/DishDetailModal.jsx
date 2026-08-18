@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Star, Flame, ShoppingBag, Check } from 'lucide-react';
-import DishViewer3D from './DishViewer3D';
-
 const EXTRAS = [
   { id: 'extra-noodles', name: 'Extra Noodles', price: 30 },
   { id: 'extra-egg', name: 'Ajitama Soft Egg', price: 40, nonVegOnly: true },
@@ -11,7 +9,11 @@ const EXTRAS = [
 
 export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
   const [extras, setExtras] = useState([]);
+  const [added, setAdded] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 800);
   const isVeg = dish.category === 'veg';
+  const scrollRef = useRef(null);
 
   const toggleExtra = (extra) => {
     setExtras((prev) =>
@@ -27,23 +29,63 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
     (e) => !(e.nonVegOnly && isVeg) && !(e.vegOnly && !isVeg)
   );
 
+  // Body scroll lock
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollY}px`;
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
+  // Escape key close
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  // Resize listener
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 800);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleAddToOrder = useCallback(() => {
+    setAdded(true);
+    onAddToOrder(dish, extras);
+    setTimeout(() => {
+      setAdded(false);
+      onClose();
+    }, 800);
+  }, [dish, extras, onAddToOrder, onClose]);
+
   return (
     <div
       className="modal-overlay"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${dish.name} details`}
     >
-      <div className="modal-panel anim-zoom-in">
+      <div className="modal-panel" ref={scrollRef}>
         {/* ── Close Button ── */}
         <button
           onClick={onClose}
           aria-label="Close Modal"
           style={{
             position: 'absolute',
-            top: 20,
-            right: 20,
+            top: 16,
+            right: 16,
             zIndex: 30,
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             borderRadius: '50%',
             background: 'rgba(9, 7, 8, 0.9)',
             border: '1.5px solid var(--warm-wood)',
@@ -67,11 +109,12 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
           <X size={18} />
         </button>
 
-        {/* ── LEFT: Interactive 3D Viewer Panel ── */}
+        {/* ── LEFT: Visual Panel ── */}
         <div
           style={{
-            padding: '36px 28px',
-            borderRight: '1.5px solid rgba(158, 22, 43, 0.15)',
+            padding: isMobile ? '24px 20px' : '36px 28px',
+            borderRight: isMobile ? 'none' : '1.5px solid rgba(158, 22, 43, 0.15)',
+            borderBottom: isMobile ? '1.5px solid rgba(158, 22, 43, 0.15)' : 'none',
             display: 'flex',
             flexDirection: 'column',
             gap: 16,
@@ -88,42 +131,57 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
               textTransform: 'uppercase',
             }}
           >
-            INTERACTIVE 3D PRESENTATION
+            DISH PRESENTATION
           </div>
           
-          <DishViewer3D dish={dish} />
-          
-          <div
-            style={{
-              fontSize: 11,
-              color: 'rgba(245, 235, 221, 0.45)',
-              textAlign: 'center',
-              letterSpacing: '0.04em',
-              lineHeight: 1.5,
-            }}
-          >
-            Use touch/mouse swipe to orbit model · scroll/pinch to zoom in and out. <br />
-            Switch tabs to explore preloaded 360° frames.
-          </div>
+          {/* Show high-quality image */}
+            <div
+              style={{
+                width: '100%',
+                aspectRatio: '4/3',
+                borderRadius: 20,
+                overflow: 'hidden',
+                position: 'relative',
+                background: '#090708',
+                border: '1.5px solid rgba(158, 22, 43, 0.25)',
+              }}
+            >
+              {!imgLoaded && (
+                <div className="skeleton" style={{ position: 'absolute', inset: 0 }} />
+              )}
+              <img
+                src={dish.image}
+                alt={dish.name}
+                loading="eager"
+                onLoad={() => setImgLoaded(true)}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: imgLoaded ? 1 : 0,
+                  transition: 'opacity 0.5s ease, transform 0.8s var(--ease-premium)',
+                }}
+              />
+            </div>
         </div>
 
         {/* ── RIGHT: Dish Descriptions & Toppings ── */}
         <div
           style={{
-            padding: '36px 32px',
+            padding: isMobile ? '24px 20px 100px' : '36px 32px',
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: 24,
-            maxHeight: '90vh',
+            gap: 22,
+            maxHeight: isMobile ? 'none' : '90vh',
           }}
           className="modal-right"
         >
           {/* Category Pill and Spiciness */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             <span
               style={{
-                padding: '6px 16px',
+                padding: '6px 14px',
                 borderRadius: 999,
                 fontSize: 10,
                 fontWeight: 800,
@@ -142,7 +200,7 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 5,
-                  padding: '6px 16px',
+                  padding: '6px 14px',
                   borderRadius: 999,
                   fontSize: 10,
                   fontWeight: 800,
@@ -195,7 +253,7 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
                 />
               ))}
               <span style={{ fontSize: 11, color: 'rgba(245, 235, 221, 0.45)', marginLeft: 6 }}>
-                5.0 · Chef Recommended Recipe
+                5.0 · Chef Recommended
               </span>
             </div>
           </div>
@@ -204,7 +262,7 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
           <div
             className="font-serif"
             style={{
-              fontSize: 36,
+              fontSize: 32,
               fontWeight: 900,
               color: 'var(--warm-gold)',
               lineHeight: 1,
@@ -283,6 +341,7 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
                       justifyContent: 'space-between',
                       textAlign: 'left',
                       transition: 'all 0.3s var(--ease-premium)',
+                      minHeight: 44,
                     }}
                   >
                     <div>
@@ -309,9 +368,9 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
                     {/* Check Circle */}
                     <div
                       style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 6,
+                        width: 22,
+                        height: 22,
+                        borderRadius: 7,
                         background: selected ? 'var(--korean-red)' : 'rgba(158, 22, 43, 0.25)',
                         border: `1px solid ${
                           selected ? 'var(--korean-red)' : 'rgba(158, 22, 43, 0.4)'
@@ -323,7 +382,7 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
                         flexShrink: 0,
                       }}
                     >
-                      {selected && <Check size={12} color="white" />}
+                      {selected && <Check size={13} color="white" />}
                     </div>
                   </button>
                 );
@@ -354,6 +413,7 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
                 letterSpacing: '0.12em',
                 cursor: 'pointer',
                 transition: 'all 0.3s var(--ease-premium)',
+                minHeight: 48,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--soft-cream)';
@@ -367,17 +427,17 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
               CLOSE
             </button>
             <button
-              onClick={() => {
-                onAddToOrder(dish, extras);
-                onClose();
-              }}
+              onClick={handleAddToOrder}
+              disabled={added}
               style={{
                 flex: 1,
                 padding: '15px 24px',
                 borderRadius: 16,
-                background: 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
+                background: added
+                  ? 'var(--green)'
+                  : 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: added ? 'default' : 'pointer',
                 color: 'var(--soft-cream)',
                 fontSize: 11,
                 fontWeight: 800,
@@ -386,18 +446,29 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                boxShadow: '0 8px 24px rgba(158, 22, 43, 0.45)',
-                transition: 'filter 0.3s, transform 0.3s var(--ease-premium)',
+                boxShadow: added
+                  ? '0 8px 24px rgba(34, 197, 94, 0.4)'
+                  : '0 8px 24px rgba(158, 22, 43, 0.45)',
+                transition: 'all 0.35s var(--ease-premium)',
+                minHeight: 48,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.filter = 'brightness(1.15)';
+                if (!added) e.currentTarget.style.filter = 'brightness(1.15)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.filter = 'none';
               }}
             >
-              <ShoppingBag size={15} />
-              ADD TO ORDER · ₹{totalPrice}
+              {added ? (
+                <>
+                  <Check size={16} /> ADDED TO ORDER!
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={15} />
+                  ADD TO ORDER · ₹{totalPrice}
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -408,7 +479,7 @@ export default function DishDetailModal({ dish, onClose, onAddToOrder }) {
         @media (max-width: 799px) {
           .modal-panel { grid-template-columns: 1fr !important; max-height: 95vh; }
           .modal-left { border-right: none !important; border-bottom: 1.5px solid rgba(158, 22, 43, 0.15); padding: 24px 20px !important; }
-          .modal-right { padding: 24px 20px !important; maxHeight: none; }
+          .modal-right { padding: 24px 20px 100px !important; }
         }
       `}</style>
     </div>

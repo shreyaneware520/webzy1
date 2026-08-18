@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import RamenCard from './components/RamenCard';
@@ -7,7 +7,7 @@ import DishDetailModal from './components/DishDetailModal';
 import OrderCart from './components/OrderCart';
 import CherryBlossomCanvas from './components/CherryBlossomCanvas';
 import { menuData } from './data/menu';
-import { Search, ChefHat, MapPin, Clock, Phone, ArrowUp } from 'lucide-react';
+import { Search, ChefHat, MapPin, Clock, Phone, ArrowUp, X, ShoppingBag } from 'lucide-react';
 
 /* ── helpers ── */
 const calcTotal = (cart) =>
@@ -16,10 +16,45 @@ const calcTotal = (cart) =>
     return t + (item.price + ext) * item.quantity;
   }, 0);
 
+/* ── useScrollReveal hook ── */
+function useScrollReveal() {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!motionOk) {
+      // If reduced motion, make all visible immediately
+      el.querySelectorAll('.scroll-reveal').forEach((c) => c.classList.add('visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    const items = el.querySelectorAll('.scroll-reveal');
+    items.forEach((item) => observer.observe(item));
+
+    return () => observer.disconnect();
+  }, []);
+
+  return ref;
+}
+
 /* ── Section Header Component ── */
 function SectionHeader({ tag, title, sub, center = true }) {
   return (
-    <div style={{ textAlign: center ? 'center' : 'left', marginBottom: 56 }}>
+    <div className="scroll-reveal" style={{ textAlign: center ? 'center' : 'left', marginBottom: 48 }}>
       <span className="section-tag">{tag}</span>
       <h2 className="section-title font-serif">{title}</h2>
       <div className="divider" style={{ margin: center ? '20px auto' : '20px 0' }} />
@@ -44,6 +79,7 @@ function SectionHeader({ tag, title, sub, center = true }) {
 function ContactCard({ icon, title, children }) {
   return (
     <div
+      className="scroll-reveal"
       style={{
         display: 'flex',
         gap: 20,
@@ -107,6 +143,181 @@ function ContactCard({ icon, title, children }) {
   );
 }
 
+/* ── SearchOverlay Component ── */
+function SearchOverlay({ query, onQueryChange, results, onSelectDish, onAddToOrder, onClose }) {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 100);
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const highlightMatch = (text, q) => {
+    if (!q || q.length < 2) return text;
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return text;
+    return (
+      <>
+        {text.slice(0, idx)}
+        <mark className="search-highlight">{text.slice(idx, idx + q.length)}</mark>
+        {text.slice(idx + q.length)}
+      </>
+    );
+  };
+
+  return (
+    <div className="search-overlay">
+      {/* Search Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search
+            size={18}
+            style={{
+              position: 'absolute',
+              left: 18,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'rgba(245, 235, 221, 0.4)',
+              pointerEvents: 'none',
+            }}
+          />
+          <input
+            ref={inputRef}
+            type="text"
+            className="search-overlay-input"
+            placeholder="Search dishes, ingredients..."
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+          />
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close search"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: 'rgba(26, 8, 13, 0.6)',
+            border: '1px solid rgba(158, 22, 43, 0.3)',
+            color: 'var(--soft-cream)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* Results */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {query.length < 2 ? (
+          <div style={{
+            textAlign: 'center', padding: '60px 20px',
+            color: 'rgba(245, 235, 221, 0.3)',
+          }}>
+            <Search size={40} style={{ marginBottom: 16, opacity: 0.3 }} />
+            <div className="font-serif" style={{ fontSize: 18, fontWeight: 800, marginBottom: 8, color: 'rgba(245, 235, 221, 0.45)' }}>
+              Search our menu
+            </div>
+            <p style={{ fontSize: 13 }}>
+              Try "chicken", "miso", "kimchi", or "dumplings"
+            </p>
+          </div>
+        ) : results.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '60px 20px',
+            color: 'rgba(245, 235, 221, 0.3)',
+          }}>
+            <ChefHat size={48} style={{ marginBottom: 16, color: 'var(--korean-red)' }} />
+            <div className="font-serif" style={{ fontSize: 18, fontWeight: 800, color: 'var(--soft-cream)', marginBottom: 8 }}>
+              No dishes found
+            </div>
+            <p style={{ fontSize: 13 }}>
+              Try searching for another dish or ingredient.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{
+              fontSize: 10, fontWeight: 800, letterSpacing: '0.2em',
+              color: 'rgba(245, 235, 221, 0.4)', marginBottom: 4,
+            }}>
+              {results.length} RESULT{results.length !== 1 ? 'S' : ''} FOUND
+            </div>
+            {results.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 16px',
+                  background: 'rgba(26, 8, 13, 0.55)',
+                  border: '1px solid rgba(158, 22, 43, 0.18)',
+                  borderRadius: 18,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s var(--ease-premium)',
+                }}
+                onClick={() => onSelectDish(item)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(201, 162, 74, 0.35)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(158, 22, 43, 0.18)';
+                  e.currentTarget.style.transform = 'none';
+                }}
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  style={{
+                    width: 56, height: 56, borderRadius: 12,
+                    objectFit: 'cover', flexShrink: 0,
+                    border: '1px solid rgba(158, 22, 43, 0.15)',
+                  }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2,
+                  }}>
+                    <span className={item.category === 'veg' ? 'veg-dot' : 'nonveg-dot'}
+                      style={{ width: 7, height: 7 }} />
+                    <span style={{
+                      fontSize: 8, fontWeight: 800, letterSpacing: '0.15em',
+                      color: 'var(--korean-red)', textTransform: 'uppercase',
+                    }}>
+                      {item.type === 'ramen' ? 'RAMEN' : 'ADD-ON'}
+                    </span>
+                  </div>
+                  <div className="font-serif" style={{
+                    fontSize: 15, fontWeight: 800, color: 'var(--soft-cream)', lineHeight: 1.2,
+                  }}>
+                    {highlightMatch(item.name, query)}
+                  </div>
+                  <div style={{
+                    fontSize: 11, color: 'rgba(245, 235, 221, 0.5)', marginTop: 2,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {highlightMatch(item.description, query)}
+                  </div>
+                </div>
+                <div className="font-serif" style={{
+                  fontSize: 16, fontWeight: 800, color: 'var(--warm-gold)', whiteSpace: 'nowrap',
+                }}>
+                  ₹{item.price}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════════
    MAIN APP
    ══════════════════════════════════════════════════════════════ */
@@ -119,11 +330,17 @@ export default function App() {
   const [selectedDish, setSelectedDish] = useState(null);
   const [activeSection, setActiveSection] = useState('hero');
   const [showTop, setShowTop] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const scrollRevealRef = useScrollReveal();
+  const categoryBarRef = useRef(null);
 
   /* ── Scroll spy ── */
   useEffect(() => {
     const onScroll = () => {
-      const y = window.scrollY + 160;
+      const y = window.scrollY + 200;
       const ids = ['contact-section', 'about-section', 'addons-section', 'ramen-collection'];
       for (const id of ids) {
         const el = document.getElementById(id);
@@ -141,11 +358,11 @@ export default function App() {
 
   const scrollTo = (id) => {
     const el = document.getElementById(id);
-    if (el) window.scrollTo({ top: el.offsetTop - 72, behavior: 'smooth' });
+    if (el) window.scrollTo({ top: el.offsetTop - 130, behavior: 'smooth' });
   };
 
   /* ── Cart ops ── */
-  const addToOrder = (dish, extras = []) => {
+  const addToOrder = useCallback((dish, extras = []) => {
     setCart((prev) => {
       const idx = prev.findIndex(
         (i) => i.id === dish.id && JSON.stringify(i.extras || []) === JSON.stringify(extras)
@@ -157,9 +374,9 @@ export default function App() {
       }
       return [...prev, { ...dish, quantity: 1, extras }];
     });
-  };
+  }, []);
 
-  const updateQty = (idx, qty) => {
+  const updateQty = useCallback((idx, qty) => {
     if (qty <= 0) setCart((c) => c.filter((_, i) => i !== idx));
     else
       setCart((c) => {
@@ -167,9 +384,68 @@ export default function App() {
         n[idx] = { ...n[idx], quantity: qty };
         return n;
       });
-  };
+  }, []);
 
-  const removeItem = (idx) => setCart((c) => c.filter((_, i) => i !== idx));
+  const removeItem = useCallback((idx) => setCart((c) => c.filter((_, i) => i !== idx)), []);
+
+  /* ── Category Navigation ── */
+  const handleCategoryChange = useCallback((cat) => {
+    setActiveCategory(cat);
+
+    if (cat === 'all') {
+      setRamenFilter('all');
+      setAddonFilter('all');
+      scrollTo('ramen-collection');
+    } else if (cat === 'ramen') {
+      setRamenFilter('all');
+      scrollTo('ramen-collection');
+    } else if (cat === 'addons') {
+      setAddonFilter('all');
+      scrollTo('addons-section');
+    } else if (cat === 'veg') {
+      setRamenFilter('veg');
+      setAddonFilter('veg');
+      scrollTo('ramen-collection');
+    } else if (cat === 'non-veg') {
+      setRamenFilter('non-veg');
+      setAddonFilter('non-veg');
+      scrollTo('ramen-collection');
+    }
+  }, []);
+
+  // Auto-scroll active category chip into view
+  useEffect(() => {
+    const bar = categoryBarRef.current;
+    if (!bar) return;
+    const activeChip = bar.querySelector('.category-chip.active');
+    if (activeChip) {
+      activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [activeCategory]);
+
+  /* ── Search ── */
+  const allDishes = useMemo(() => [
+    ...menuData.ramen,
+    ...menuData.addOns,
+  ], []);
+
+  const searchResults = useMemo(() => {
+    if (searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
+    return allDishes.filter((d) =>
+      d.name.toLowerCase().includes(q) ||
+      d.description.toLowerCase().includes(q) ||
+      (d.ingredients && d.ingredients.some((ing) => ing.toLowerCase().includes(q))) ||
+      d.category.includes(q) ||
+      d.type.includes(q)
+    );
+  }, [searchQuery, allDishes]);
+
+  const handleSearchSelect = useCallback((dish) => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSelectedDish(dish);
+  }, []);
 
   /* ── Filters ── */
   const filteredRamen = menuData.ramen.filter(
@@ -186,8 +462,17 @@ export default function App() {
   const cartQty = cart.reduce((s, i) => s + i.quantity, 0);
   const cartTotal = calcTotal(cart);
 
+  const categories = [
+    { id: 'all', label: 'All', emoji: '🍜' },
+    { id: 'ramen', label: 'Ramen', emoji: '🍲' },
+    { id: 'addons', label: 'Add-Ons', emoji: '🥟' },
+    { id: 'veg', label: 'Veg', emoji: '🌿' },
+    { id: 'non-veg', label: 'Non-Veg', emoji: '🍖' },
+  ];
+
   return (
     <div
+      ref={scrollRevealRef}
       style={{
         minHeight: '100vh',
         background: 'var(--deep-black)',
@@ -205,7 +490,20 @@ export default function App() {
         onCartClick={() => setCartOpen(true)}
         activeSection={activeSection}
         scrollToSection={scrollTo}
+        onSearchOpen={() => setSearchOpen(true)}
       />
+
+      {/* ── Search Overlay ── */}
+      {searchOpen && (
+        <SearchOverlay
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          results={searchResults}
+          onSelectDish={handleSearchSelect}
+          onAddToOrder={addToOrder}
+          onClose={() => { setSearchOpen(false); setSearchQuery(''); }}
+        />
+      )}
 
       {/* ── Hero Section ── */}
       <div id="hero">
@@ -230,13 +528,28 @@ export default function App() {
         <div style={{ position: 'absolute', bottom: -8, left: 0, right: 0, height: 8, background: 'linear-gradient(rgba(0,0,0,0.6), transparent)' }} />
       </div>
 
+      {/* ── Sticky Category Navigation Bar ── */}
+      <div className="category-bar">
+        <div className="category-bar-inner" ref={categoryBarRef}>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryChange(cat.id)}
+              className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
+            >
+              <span>{cat.emoji}</span> {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ══════════════════════════════
           RAMEN COLLECTION SECTION
           ══════════════════════════════ */}
       <section
         id="ramen-collection"
         style={{
-          padding: '100px 0',
+          padding: '80px 0',
           position: 'relative',
           overflow: 'hidden',
           background: 'linear-gradient(180deg, var(--deep-black) 0%, var(--dark-burgundy) 100%)',
@@ -279,6 +592,7 @@ export default function App() {
 
           {/* Filtering Toolbar */}
           <div
+            className="scroll-reveal"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -338,24 +652,19 @@ export default function App() {
 
           {/* Ramen Product Grid */}
           {filteredRamen.length > 0 ? (
-            <div className="grid-ramen">
-              {filteredRamen.map((dish, i) => (
-                <div
-                  key={dish.id}
-                  style={{
-                    animation: `fadeInUp 0.65s ${i * 0.08}s var(--ease-premium) both`,
-                  }}
-                >
+            <div className="grid-ramen scroll-reveal-stagger">
+              {filteredRamen.map((dish) => (
+                <div key={dish.id} className="scroll-reveal">
                   <RamenCard
                     dish={dish}
-                    onOpen3D={setSelectedDish}
+                    onViewDetails={setSelectedDish}
                     onAddToOrder={addToOrder}
                   />
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '90px 0', color: 'rgba(245, 235, 221, 0.3)' }}>
+            <div className="scroll-reveal" style={{ textAlign: 'center', padding: '90px 0', color: 'rgba(245, 235, 221, 0.3)' }}>
               <ChefHat size={56} strokeWidth={1} style={{ marginBottom: 18, color: 'var(--korean-red)' }} />
               <div className="font-serif" style={{ fontSize: 22, fontWeight: 800, color: 'var(--soft-cream)' }}>
                 No Ramen Found
@@ -386,7 +695,7 @@ export default function App() {
       <section
         id="addons-section"
         style={{
-          padding: '100px 0',
+          padding: '80px 0',
           background: 'linear-gradient(180deg, var(--dark-burgundy) 0%, #15060b 50%, var(--deep-black) 100%)',
           borderTop: '1px solid rgba(158, 22, 43, 0.12)',
         }}
@@ -399,7 +708,7 @@ export default function App() {
           />
 
           {/* Addons Category filters */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 40 }}>
+          <div className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', marginBottom: 40 }}>
             <div className="filter-tabs" style={{ maxWidth: 360, width: '100%' }}>
               {[
                 ['all', 'All Extras'],
@@ -418,14 +727,9 @@ export default function App() {
           </div>
 
           {/* Add-ons Grid */}
-          <div className="grid-addons">
-            {filteredAddons.map((item, i) => (
-              <div
-                key={item.id}
-                style={{
-                  animation: `fadeInUp 0.5s ${i * 0.05}s var(--ease-premium) both`,
-                }}
-              >
+          <div className="grid-addons scroll-reveal-stagger">
+            {filteredAddons.map((item) => (
+              <div key={item.id} className="scroll-reveal">
                 <AddOnCard item={item} onAddToOrder={addToOrder} />
               </div>
             ))}
@@ -451,7 +755,7 @@ export default function App() {
       <section
         id="about-section"
         style={{
-          padding: '100px 0',
+          padding: '80px 0',
           borderTop: '1px solid rgba(158, 22, 43, 0.12)',
           background: 'var(--deep-black)',
           position: 'relative',
@@ -465,6 +769,7 @@ export default function App() {
           >
             {/* Visual Frame inspired by the actual storefront wooden cart */}
             <div
+              className="scroll-reveal"
               style={{
                 position: 'relative',
                 borderRadius: 28,
@@ -488,6 +793,7 @@ export default function App() {
                 <img
                   src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=1000&auto=format&fit=crop&q=85"
                   alt="Chef crafting ramen at Little Kimchi cart"
+                  loading="lazy"
                   style={{
                     width: '100%',
                     height: '100%',
@@ -554,6 +860,7 @@ export default function App() {
                 center={false}
               />
               <p
+                className="scroll-reveal"
                 style={{
                   fontSize: 14.5,
                   color: 'rgba(245, 235, 221, 0.75)',
@@ -567,6 +874,7 @@ export default function App() {
                 complex umami tones.
               </p>
               <p
+                className="scroll-reveal"
                 style={{
                   fontSize: 14.5,
                   color: 'rgba(245, 235, 221, 0.75)',
@@ -580,7 +888,7 @@ export default function App() {
               </p>
               
               {/* Feature Highlights */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="scroll-reveal-stagger" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 {[
                   ['18+ Hrs Boil', 'BROTH EXTRACTION'],
                   ['Daily Hand-Cut', 'HOUSE WHEAT NOODLES'],
@@ -589,6 +897,7 @@ export default function App() {
                 ].map(([val, lab]) => (
                   <div
                     key={lab}
+                    className="scroll-reveal"
                     style={{
                       padding: '20px 22px',
                       borderRadius: 18,
@@ -649,7 +958,7 @@ export default function App() {
       <section
         id="contact-section"
         style={{
-          padding: '100px 0',
+          padding: '80px 0',
           background: 'linear-gradient(180deg, var(--deep-black) 0%, var(--dark-burgundy) 50%, var(--deep-black) 100%)',
           borderTop: '1px solid rgba(158, 22, 43, 0.12)',
         }}
@@ -661,6 +970,7 @@ export default function App() {
             sub="We run tables Tuesday through Sunday. Walk in, scan the QR code to interact with our menu, and enjoy freshly served hot ramen."
           />
           <div
+            className="scroll-reveal-stagger"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -784,26 +1094,25 @@ export default function App() {
         onClearCart={() => setCart([])}
       />
 
-      {/* Sticky Quick View Order bar (Mobile only) */}
-      {cartQty > 0 && !cartOpen && (
+      {/* ── Floating Cart Bar (Mobile) ── */}
+      {cartQty > 0 && !cartOpen && !selectedDish && (
         <button
-          className="mobile-order-bar"
+          className="floating-cart-bar"
           onClick={() => setCartOpen(true)}
-          style={{ display: 'none' }}
-          id="mobile-cart-bar"
+          aria-label={`View order: ${cartQty} items, ₹${cartTotal}`}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span
               style={{
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 borderRadius: '50%',
                 background: 'rgba(255,255,255,0.22)',
                 border: '1px solid rgba(255,255,255,0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 900,
               }}
             >
@@ -813,7 +1122,7 @@ export default function App() {
               VIEW ORDER
             </span>
           </span>
-          <span style={{ fontSize: 14.5, fontWeight: 900 }}>₹{cartTotal}</span>
+          <span style={{ fontSize: 15, fontWeight: 900 }}>₹{cartTotal}</span>
         </button>
       )}
 
@@ -824,7 +1133,7 @@ export default function App() {
           aria-label="Scroll back to top of page"
           style={{
             position: 'fixed',
-            bottom: 28,
+            bottom: cartQty > 0 ? 84 : 28,
             right: 24,
             zIndex: 50,
             width: 46,
@@ -858,10 +1167,6 @@ export default function App() {
 
       {/* ── Responsive Mobile Overrides ── */}
       <style>{`
-        @media (max-width: 768px) {
-          #mobile-cart-bar { display: flex !important; }
-        }
-        
         .hero-inner-grid {
           grid-template-columns: 1.15fr 0.85fr !important;
         }

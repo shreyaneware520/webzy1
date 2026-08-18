@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Menu, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ShoppingBag, Search, X, Menu } from 'lucide-react';
 
-export default function Navbar({ cartCount, onCartClick, activeSection, scrollToSection }) {
+export default function Navbar({ cartCount, onCartClick, activeSection, scrollToSection, onSearchOpen }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const prevCount = useRef(cartCount);
+  const [badgePop, setBadgePop] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -12,6 +14,16 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Animate cart badge on count change
+  useEffect(() => {
+    if (cartCount > prevCount.current) {
+      setBadgePop(true);
+      const t = setTimeout(() => setBadgePop(false), 400);
+      return () => clearTimeout(t);
+    }
+    prevCount.current = cartCount;
+  }, [cartCount]);
 
   const navItems = [
     { label: 'RAMEN', id: 'ramen-collection' },
@@ -25,6 +37,15 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
     setMenuOpen(false);
   };
 
+  // Close menu on escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape' && menuOpen) setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   return (
     <>
       <nav
@@ -34,13 +55,13 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
           left: 0,
           right: 0,
           zIndex: 80,
-          background: scrolled ? 'rgba(9, 7, 8, 0.94)' : 'rgba(9, 7, 8, 0.4)',
+          background: scrolled ? 'rgba(9, 7, 8, 0.96)' : 'rgba(9, 7, 8, 0.4)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: scrolled
             ? '1.5px solid rgba(158, 22, 43, 0.25)'
-            : '1px solid rgba(158, 22, 43, 0.12)',
-          boxShadow: scrolled ? '0 10px 30px rgba(0, 0, 0, 0.5)' : 'none',
+            : '1px solid rgba(158, 22, 43, 0.08)',
+          boxShadow: scrolled ? '0 8px 30px rgba(0, 0, 0, 0.5)' : 'none',
           transition: 'all 0.4s var(--ease-premium)',
         }}
       >
@@ -50,28 +71,29 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            height: scrolled ? 68 : 78,
+            height: scrolled ? 64 : 78,
             transition: 'height 0.4s var(--ease-premium)',
           }}
         >
           {/* ── Brand Logo & Emblem ── */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Scroll to top"
             style={{
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: 14,
+              gap: 12,
               textAlign: 'left',
             }}
           >
             {/* Custom Premium SVG Emblem */}
             <div
               style={{
-                width: 44,
-                height: 44,
+                width: scrolled ? 38 : 44,
+                height: scrolled ? 38 : 44,
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
                 border: '1.5px solid var(--warm-gold)',
@@ -82,18 +104,12 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
                   ? '0 4px 16px rgba(158, 22, 43, 0.5)'
                   : '0 4px 12px rgba(158, 22, 43, 0.3)',
                 flexShrink: 0,
-                transition: 'all 0.3s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'rotate(15deg) scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'none';
+                transition: 'all 0.4s var(--ease-premium)',
               }}
             >
               <svg
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -144,7 +160,7 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
               <div
                 style={{
                   fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: scrolled ? 16 : 18,
+                  fontSize: scrolled ? 15 : 17,
                   fontWeight: 800,
                   letterSpacing: '0.18em',
                   background: 'var(--grad-gold)',
@@ -157,11 +173,15 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
               </div>
               <div
                 style={{
-                  fontSize: 9,
+                  fontSize: 8,
                   letterSpacing: '0.3em',
                   color: 'var(--korean-red)',
                   fontWeight: 700,
                   marginTop: -2,
+                  transition: 'opacity 0.3s',
+                  opacity: scrolled ? 0 : 1,
+                  height: scrolled ? 0 : 'auto',
+                  overflow: 'hidden',
                 }}
               >
                 리틀 김치 · SEOUL RAMEN
@@ -179,9 +199,6 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
                 key={item.id}
                 onClick={() => handleNav(item.id)}
                 className={`nav-link ${activeSection === item.id ? 'active' : ''}`}
-                style={{
-                  transition: 'color 0.3s, transform 0.2s',
-                }}
               >
                 {item.label}
               </button>
@@ -189,11 +206,33 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
           </div>
 
           {/* ── Action Icons & Mobile Hamburger ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Mobile Search Button */}
+            <button
+              onClick={onSearchOpen}
+              aria-label="Search menu"
+              className="mobile-search-btn"
+              style={{
+                display: 'none',
+                width: 44,
+                height: 44,
+                background: 'none',
+                border: '1px solid rgba(158, 22, 43, 0.25)',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                color: 'rgba(245, 235, 221, 0.7)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s',
+              }}
+            >
+              <Search size={17} />
+            </button>
+
             {/* Shopping Cart Button */}
             <button
               onClick={onCartClick}
-              aria-label="Open Cart"
+              aria-label={`Open Cart, ${cartCount} items`}
               style={{
                 position: 'relative',
                 background: 'rgba(58, 12, 21, 0.45)',
@@ -211,7 +250,7 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--warm-gold)';
                 e.currentTarget.style.color = 'var(--warm-gold)';
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(158, 22, 43, 0.3)';
@@ -222,6 +261,7 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
               <ShoppingBag size={18} />
               {cartCount > 0 && (
                 <span
+                  className={badgePop ? 'anim-badge-pop' : ''}
                   style={{
                     position: 'absolute',
                     top: -4,
@@ -250,11 +290,13 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
               onClick={() => setMenuOpen(!menuOpen)}
               className="hamburger-btn"
               aria-label="Toggle Menu"
+              aria-expanded={menuOpen}
               style={{
                 background: 'none',
                 border: '1px solid rgba(158, 22, 43, 0.3)',
                 borderRadius: 12,
-                padding: 10,
+                width: 44,
+                height: 44,
                 cursor: 'pointer',
                 color: 'var(--soft-cream)',
                 display: 'none',
@@ -269,52 +311,55 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
         </div>
 
         {/* ── Mobile Navigation Drawer ── */}
-        {menuOpen && (
-          <div
-            style={{
-              background: 'rgba(9, 7, 8, 0.98)',
-              borderTop: '1.5px solid rgba(158, 22, 43, 0.25)',
-              padding: '20px 24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              animation: 'fadeInUp 0.3s ease',
-            }}
-            className="mobile-drawer"
-          >
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNav(item.id)}
-                style={{
-                  background:
-                    activeSection === item.id
-                      ? 'rgba(158, 22, 43, 0.15)'
-                      : 'transparent',
-                  border: 'none',
-                  borderRadius: 14,
-                  padding: '14px 22px',
-                  color:
-                    activeSection === item.id
-                      ? 'var(--warm-gold)'
-                      : 'var(--soft-cream)',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  letterSpacing: '0.18em',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  borderLeft:
-                    activeSection === item.id
-                      ? '3px solid var(--warm-gold)'
-                      : '3px solid transparent',
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div
+          style={{
+            background: 'rgba(9, 7, 8, 0.98)',
+            borderTop: '1.5px solid rgba(158, 22, 43, 0.25)',
+            padding: menuOpen ? '16px 24px 20px' : '0 24px',
+            maxHeight: menuOpen ? 300 : 0,
+            overflow: 'hidden',
+            transition: 'max-height 0.4s var(--ease-premium), padding 0.4s var(--ease-premium)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+          className="mobile-drawer"
+        >
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleNav(item.id)}
+              style={{
+                background:
+                  activeSection === item.id
+                    ? 'rgba(158, 22, 43, 0.15)'
+                    : 'transparent',
+                border: 'none',
+                borderRadius: 14,
+                padding: '14px 22px',
+                color:
+                  activeSection === item.id
+                    ? 'var(--warm-gold)'
+                    : 'var(--soft-cream)',
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                borderLeft:
+                  activeSection === item.id
+                    ? '3px solid var(--warm-gold)'
+                    : '3px solid transparent',
+                minHeight: 44,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </nav>
 
       {/* ── Responsive Mobile Nav Override ── */}
@@ -322,6 +367,7 @@ export default function Navbar({ cartCount, onCartClick, activeSection, scrollTo
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .hamburger-btn { display: flex !important; }
+          .mobile-search-btn { display: flex !important; }
         }
       `}</style>
     </>

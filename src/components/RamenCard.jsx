@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { Eye, Flame, Plus } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Eye, Flame, Plus, Check } from 'lucide-react';
 
-export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
+export default function RamenCard({ dish, onViewDetails, onAddToOrder }) {
   const isVeg = dish.category === 'veg';
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = useCallback((e) => {
+    e.stopPropagation();
+    onAddToOrder(dish);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  }, [dish, onAddToOrder]);
 
   return (
     <article
@@ -77,7 +86,7 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
 
       {/* ── Food Image (Hover trigger) ── */}
       <div
-        onClick={() => onOpen3D(dish)}
+        onClick={() => onViewDetails(dish)}
         style={{
           position: 'relative',
           paddingTop: '72%',
@@ -86,7 +95,22 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
           cursor: 'pointer',
         }}
         className="card-img-wrap"
+        role="button"
+        tabIndex={0}
+        aria-label={`View details for ${dish.name}`}
+        onKeyDown={(e) => { if (e.key === 'Enter') onViewDetails(dish); }}
       >
+        {/* Skeleton placeholder */}
+        {!imgLoaded && !imgError && (
+          <div
+            className="skeleton"
+            style={{
+              position: 'absolute',
+              inset: 0,
+            }}
+          />
+        )}
+
         {imgError ? (
           <div
             style={{
@@ -117,6 +141,8 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
           <img
             src={dish.image}
             alt={dish.name}
+            loading="lazy"
+            onLoad={() => setImgLoaded(true)}
             onError={() => setImgError(true)}
             style={{
               position: 'absolute',
@@ -124,7 +150,8 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              transition: 'transform 0.7s var(--ease-premium)',
+              transition: 'transform 0.7s var(--ease-premium), opacity 0.5s ease',
+              opacity: imgLoaded ? 1 : 0,
             }}
             className="card-img"
           />
@@ -171,7 +198,7 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
             }}
             className="card-cta"
           >
-            <Eye size={13} strokeWidth={2.5} /> VIEW IN 3D
+            <Eye size={13} strokeWidth={2.5} /> VIEW DETAILS
           </div>
         </div>
       </div>
@@ -179,12 +206,12 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
       {/* ── Card Content Details ── */}
       <div
         style={{
-          padding: '22px 24px 24px',
+          padding: '20px 22px 22px',
           background: 'linear-gradient(180deg, rgba(26, 8, 13, 0.25) 0%, rgba(9, 7, 8, 0.75) 100%)',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          gap: 14,
+          gap: 12,
           borderTop: '1.5px solid rgba(158, 22, 43, 0.15)',
         }}
       >
@@ -206,7 +233,7 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
             <h3
               className="font-serif card-title"
               style={{
-                fontSize: 20,
+                fontSize: 19,
                 fontWeight: 800,
                 color: 'var(--soft-cream)',
                 lineHeight: 1.25,
@@ -219,7 +246,7 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
           <div
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: 21,
+              fontSize: 20,
               fontWeight: 800,
               color: 'var(--warm-gold)',
               whiteSpace: 'nowrap',
@@ -278,7 +305,7 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
         {/* Quick Actions */}
         <div style={{ display: 'flex', gap: 10, marginTop: 'auto', paddingTop: 6 }}>
           <button
-            onClick={() => onOpen3D(dish)}
+            onClick={() => onViewDetails(dish)}
             style={{
               flex: 1,
               padding: '12px 0',
@@ -295,6 +322,7 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
               justifyContent: 'center',
               gap: 8,
               transition: 'all 0.35s var(--ease-premium)',
+              minHeight: 44,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'var(--warm-gold)';
@@ -307,15 +335,18 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
               e.currentTarget.style.color = 'var(--soft-cream)';
             }}
           >
-            <Eye size={13} color="var(--warm-gold)" /> VIEW IN 3D
+            <Eye size={13} color="var(--warm-gold)" /> VIEW DETAILS
           </button>
           <button
-            onClick={() => onAddToOrder(dish)}
-            aria-label="Add to order"
+            onClick={handleAdd}
+            aria-label={`Add ${dish.name} to order`}
+            className={`add-btn-confirm ${added ? 'added' : ''}`}
             style={{
               width: 44,
               height: 44,
-              background: 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
+              background: added
+                ? 'var(--green)'
+                : 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
               border: 'none',
               borderRadius: 14,
               cursor: 'pointer',
@@ -323,20 +354,16 @@ export default function RamenCard({ dish, onOpen3D, onAddToOrder }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(158, 22, 43, 0.45)',
+              boxShadow: added
+                ? '0 4px 14px rgba(34, 197, 94, 0.45)'
+                : '0 4px 14px rgba(158, 22, 43, 0.45)',
               transition: 'all 0.3s var(--ease-premium)',
               flexShrink: 0,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.filter = 'brightness(1.2)';
-              e.currentTarget.style.transform = 'scale(1.08) rotate(90deg)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.filter = 'none';
-              e.currentTarget.style.transform = 'none';
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
-            <Plus size={18} />
+            {added ? <Check size={18} /> : <Plus size={18} />}
           </button>
         </div>
       </div>

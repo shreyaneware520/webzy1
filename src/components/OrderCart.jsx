@@ -1,10 +1,31 @@
-import React, { useState } from 'react';
-import { X, Trash2, Plus, Minus, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Trash2, Plus, Minus } from 'lucide-react';
 
 export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onRemoveItem, onClearCart }) {
-  const [placed, setPlaced] = useState(false);
-  const [ordering, setOrdering] = useState(false);
   const [dineIn, setDineIn] = useState(true);
+
+  // Body scroll lock when cart open
+  useEffect(() => {
+    if (!isOpen) return;
+    const scrollY = window.scrollY;
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollY}px`;
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
+  // Escape key close
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -13,23 +34,6 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
     return t + (item.price + ext) * item.quantity;
   }, 0);
   const gst = Math.round(subtotal * 0.05);
-  const total = subtotal + gst;
-
-  const placeOrder = () => {
-    if (!cart.length) return;
-    setOrdering(true);
-    // Simulate API call to kitchen order manager
-    setTimeout(() => {
-      setOrdering(false);
-      setPlaced(true);
-    }, 2000);
-  };
-
-  const reset = () => {
-    onClearCart();
-    setPlaced(false);
-    onClose();
-  };
 
   return (
     <>
@@ -37,7 +41,7 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
       <div className="cart-overlay" onClick={onClose} />
 
       {/* Drawer Panel */}
-      <div className="cart-drawer">
+      <div className="cart-drawer" role="dialog" aria-modal="true" aria-label="Shopping Cart">
         {/* ── Header Area ── */}
         <div
           style={{
@@ -73,8 +77,8 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
             onClick={onClose}
             aria-label="Close Cart"
             style={{
-              width: 38,
-              height: 38,
+              width: 44,
+              height: 44,
               borderRadius: 12,
               background: 'rgba(9, 7, 8, 0.85)',
               border: '1.5px solid var(--warm-wood)',
@@ -106,70 +110,7 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
             padding: '24px 24px',
           }}
         >
-          {placed ? (
-            /* Order Placed Success */
-            <div
-              style={{
-                height: '100%',
-                minHeight: 340,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                gap: 24,
-              }}
-            >
-              <div
-                style={{
-                  width: 88,
-                  height: 88,
-                  borderRadius: '50%',
-                  background: 'rgba(34, 197, 94, 0.12)',
-                  border: '2px solid rgba(34, 197, 94, 0.55)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 8px 24px rgba(34, 197, 94, 0.25)',
-                }}
-              >
-                <CheckCircle2 size={44} color="#22c55e" />
-              </div>
-              
-              <div>
-                <div
-                  className="font-serif"
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 900,
-                    color: 'var(--soft-cream)',
-                    marginBottom: 10,
-                  }}
-                >
-                  ORDER SUBMITTED!
-                </div>
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: 'rgba(245, 235, 221, 0.6)',
-                    lineHeight: 1.7,
-                    maxWidth: 280,
-                    margin: '0 auto',
-                  }}
-                >
-                  Your Korean broth & noodles are cooking on high heat. We'll alert your table shortly.
-                </p>
-              </div>
-              
-              <button
-                onClick={reset}
-                className="btn-primary"
-                style={{ padding: '14px 32px', marginTop: 8 }}
-              >
-                ORDER MORE SPECIALTIES 🍜
-              </button>
-            </div>
-          ) : cart.length === 0 ? (
+          {cart.length === 0 ? (
             /* Empty State */
             <div
               style={{
@@ -187,11 +128,11 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
               <span style={{ fontSize: 60, filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.5))' }}>
                 🍜
               </span>
-              <div className="font-serif" style={{ fontSize: 19, fontWeight: 800 }}>
+              <div className="font-serif" style={{ fontSize: 19, fontWeight: 800, color: 'rgba(245, 235, 221, 0.5)' }}>
                 Your bowl is empty
               </div>
               <p style={{ fontSize: 12.5, maxWidth: 220, margin: '0 auto', lineHeight: 1.6 }}>
-                Explore the Little Kimchi collection and add dishes to start.
+                Explore the Little Kimchi collection and find something delicious.
               </p>
             </div>
           ) : (
@@ -212,11 +153,13 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                       borderRadius: 20,
                       alignItems: 'flex-start',
                       transition: 'all 0.3s',
+                      animation: 'fadeInUp 0.3s var(--ease-premium)',
                     }}
                   >
                     <img
                       src={item.image}
                       alt={item.name}
+                      loading="lazy"
                       style={{
                         width: 64,
                         height: 64,
@@ -246,15 +189,20 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                         
                         <button
                           onClick={() => onRemoveItem(idx)}
-                          aria-label="Remove Item"
+                          aria-label={`Remove ${item.name}`}
                           style={{
                             background: 'none',
                             border: 'none',
                             cursor: 'pointer',
                             color: 'rgba(245, 235, 221, 0.35)',
-                            padding: 2,
+                            padding: 4,
                             transition: 'color 0.3s',
                             flexShrink: 0,
+                            width: 32,
+                            height: 32,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--warm-red)')}
                           onMouseLeave={(e) =>
@@ -302,6 +250,7 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                             fontSize: 16,
                             fontWeight: 900,
                             color: 'var(--warm-gold)',
+                            transition: 'all 0.3s',
                           }}
                         >
                           ₹{lineTotal}
@@ -313,7 +262,7 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                             alignItems: 'center',
                             background: 'rgba(9, 7, 8, 0.75)',
                             border: '1px solid rgba(158, 22, 43, 0.3)',
-                            borderRadius: 10,
+                            borderRadius: 12,
                             overflow: 'hidden',
                           }}
                         >
@@ -321,13 +270,16 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                             onClick={() => onUpdateQuantity(idx, item.quantity - 1)}
                             aria-label="Decrease quantity"
                             style={{
-                              padding: '6px 12px',
+                              padding: '8px 14px',
                               background: 'none',
                               border: 'none',
                               color: 'var(--soft-cream)',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
+                              minWidth: 44,
+                              minHeight: 36,
+                              justifyContent: 'center',
                             }}
                           >
                             <Minus size={12} />
@@ -335,11 +287,12 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                           
                           <span
                             style={{
-                              fontSize: 12.5,
+                              fontSize: 13,
                               fontWeight: 800,
                               color: 'var(--soft-cream)',
-                              minWidth: 20,
+                              minWidth: 24,
                               textAlign: 'center',
+                              transition: 'all 0.2s',
                             }}
                           >
                             {item.quantity}
@@ -349,13 +302,16 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                             onClick={() => onUpdateQuantity(idx, item.quantity + 1)}
                             aria-label="Increase quantity"
                             style={{
-                              padding: '6px 12px',
+                              padding: '8px 14px',
                               background: 'none',
                               border: 'none',
                               color: 'var(--soft-cream)',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
+                              minWidth: 44,
+                              minHeight: 36,
+                              justifyContent: 'center',
                             }}
                           >
                             <Plus size={12} />
@@ -371,7 +327,7 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
         </div>
 
         {/* ── Bill Summary Footer ── */}
-        {!placed && cart.length > 0 && (
+        {cart.length > 0 && (
           <div
             style={{
               padding: '24px',
@@ -381,7 +337,7 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
           >
             {/* Dine-in Service Toggle */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-              {[['🪑 DINE-IN SERVICE', true], ['🛍 TAKEAWAY PACK', false]].map(([label, val]) => (
+              {[['🪑 DINE-IN', true], ['🛍 TAKEAWAY', false]].map(([label, val]) => (
                 <button
                   key={label}
                   onClick={() => setDineIn(val)}
@@ -398,6 +354,7 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
                     }`,
                     color: dineIn === val ? 'var(--warm-gold)' : 'rgba(245, 235, 221, 0.5)',
                     letterSpacing: '0.08em',
+                    minHeight: 44,
                   }}
                 >
                   {label}
@@ -405,79 +362,6 @@ export default function OrderCart({ isOpen, onClose, cart, onUpdateQuantity, onR
               ))}
             </div>
 
-            {/* Calculations Breakdown */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'rgba(245, 235, 221, 0.6)' }}>
-                <span>Broth Subtotal</span>
-                <span>₹{subtotal}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'rgba(245, 235, 221, 0.6)' }}>
-                <span>SGST + CGST (5%)</span>
-                <span>₹{gst}</span>
-              </div>
-              
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 19,
-                  fontWeight: 900,
-                  color: 'var(--warm-gold)',
-                  paddingTop: 12,
-                  borderTop: '1.5px solid rgba(158, 22, 43, 0.25)',
-                }}
-              >
-                <span>TOTAL DUE</span>
-                <span>₹{total}</span>
-              </div>
-            </div>
-
-            {/* Checkout Action Button */}
-            <button
-              onClick={placeOrder}
-              disabled={ordering}
-              style={{
-                width: '100%',
-                padding: '16px',
-                borderRadius: 16,
-                background: ordering
-                  ? 'rgba(158, 22, 43, 0.5)'
-                  : 'linear-gradient(135deg, var(--korean-red), var(--warm-red))',
-                border: 'none',
-                cursor: ordering ? 'not-allowed' : 'pointer',
-                color: 'var(--soft-cream)',
-                fontSize: 12,
-                fontWeight: 800,
-                letterSpacing: '0.15em',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                boxShadow: '0 8px 30px rgba(158, 22, 43, 0.45)',
-                transition: 'all 0.3s',
-              }}
-              onMouseEnter={(e) => !ordering && (e.currentTarget.style.filter = 'brightness(1.15)')}
-              onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
-            >
-              {ordering ? (
-                <>
-                  <span
-                    className="anim-spin"
-                    style={{
-                      display: 'inline-block',
-                      width: 14,
-                      height: 14,
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderTopColor: '#fff',
-                      borderRadius: '50%',
-                    }}
-                  />{' '}
-                  DISPATCHING TO KITCHEN...
-                </>
-              ) : (
-                <>SUBMIT ORDER · ₹{total}</>
-              )}
-            </button>
           </div>
         )}
       </div>
