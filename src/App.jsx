@@ -17,7 +17,7 @@ const calcTotal = (cart) =>
   }, 0);
 
 /* ── useScrollReveal hook ── */
-function useScrollReveal() {
+function useScrollReveal(deps = []) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ function useScrollReveal() {
     items.forEach((item) => observer.observe(item));
 
     return () => observer.disconnect();
-  }, []);
+  }, deps);
 
   return ref;
 }
@@ -324,7 +324,7 @@ function SearchOverlay({ query, onQueryChange, results, onSelectDish, onAddToOrd
 export default function App() {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [ramenFilter, setRamenFilter] = useState('all');
+  const [ramenFilter, setRamenFilter] = useState('veg');
   const [addonFilter, setAddonFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [selectedDish, setSelectedDish] = useState(null);
@@ -334,7 +334,7 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const scrollRevealRef = useScrollReveal();
+  const scrollRevealRef = useScrollReveal([ramenFilter, addonFilter, query]);
   const categoryBarRef = useRef(null);
 
   /* ── Scroll spy ── */
@@ -393,11 +393,11 @@ export default function App() {
     setActiveCategory(cat);
 
     if (cat === 'all') {
-      setRamenFilter('all');
+      setRamenFilter('veg');
       setAddonFilter('all');
       scrollTo('ramen-collection');
     } else if (cat === 'ramen') {
-      setRamenFilter('all');
+      setRamenFilter('veg');
       scrollTo('ramen-collection');
     } else if (cat === 'addons') {
       setAddonFilter('all');
@@ -450,7 +450,7 @@ export default function App() {
   /* ── Filters ── */
   const filteredRamen = menuData.ramen.filter(
     (d) =>
-      (ramenFilter === 'all' || d.category === ramenFilter) &&
+      d.category === ramenFilter &&
       (d.name.toLowerCase().includes(query.toLowerCase()) ||
         d.description.toLowerCase().includes(query.toLowerCase()))
   );
@@ -590,69 +590,75 @@ export default function App() {
             sub="Slow-simmered 18-hour broth paired with fresh house-crafted noodles, soft Ajitama egg, and roasted toppings."
           />
 
-          {/* Filtering Toolbar */}
-          <div
-            className="scroll-reveal"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-              alignItems: 'stretch',
-              background: 'rgba(26, 8, 13, 0.65)',
-              border: '1.5px solid rgba(158, 22, 43, 0.22)',
-              borderRadius: 22,
-              padding: 20,
-              marginBottom: 44,
-              backdropFilter: 'blur(12px)',
-              maxWidth: 880,
-              margin: '0 auto 44px',
-            }}
-          >
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
-              {/* Category buttons */}
-              <div className="filter-tabs" style={{ flex: 1, minWidth: 260 }}>
-                {[
-                  ['all', 'SHOW ALL'],
-                  ['veg', '🌿 VEG'],
-                  ['non-veg', '🍖 NON-VEG'],
-                ].map(([val, label]) => (
-                  <button
-                    key={val}
-                    onClick={() => setRamenFilter(val)}
-                    className={`filter-tab ${ramenFilter === val ? 'active' : ''}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Search bar input */}
-              <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
-                <Search
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: 16,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'rgba(245, 235, 221, 0.4)',
-                    pointerEvents: 'none',
-                  }}
-                />
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Search broth, chicken, egg, miso..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
+          {/* ── Premium VEG / NON-VEG Segmented Toggle ── */}
+          <div className="scroll-reveal" style={{ marginBottom: 12 }}>
+            <div className="ramen-category-toggle">
+              <button
+                onClick={() => setRamenFilter('veg')}
+                className={`ramen-category-btn ${ramenFilter === 'veg' ? 'active veg-active' : ''}`}
+                aria-pressed={ramenFilter === 'veg'}
+              >
+                <span className="food-type-indicator veg" />
+                VEG RAMEN
+              </button>
+              <button
+                onClick={() => setRamenFilter('non-veg')}
+                className={`ramen-category-btn ${ramenFilter === 'non-veg' ? 'active nonveg-active' : ''}`}
+                aria-pressed={ramenFilter === 'non-veg'}
+              >
+                <span className="food-type-indicator nonveg" />
+                NON-VEG RAMEN
+              </button>
             </div>
           </div>
 
-          {/* Ramen Product Grid */}
+          {/* ── Category Header ── */}
+          <div className="ramen-category-header" key={`header-${ramenFilter}`}>
+            <h3>
+              <span className={`food-type-indicator ${ramenFilter === 'veg' ? 'veg' : 'nonveg'}`} />
+              {ramenFilter === 'veg' ? 'VEG RAMEN' : 'NON-VEG RAMEN'}
+            </h3>
+            <p>
+              {ramenFilter === 'veg'
+                ? 'Fresh vegetarian bowls crafted with plant-based ingredients'
+                : 'Rich bowls with slow-roasted meat & seafood'}
+            </p>
+            <div className={`accent-line ${ramenFilter === 'veg' ? 'veg' : 'nonveg'}`} />
+          </div>
+
+          {/* ── Search Bar ── */}
+          <div
+            className="scroll-reveal"
+            style={{
+              maxWidth: 480,
+              margin: '24px auto 40px',
+              position: 'relative',
+            }}
+          >
+            <Search
+              size={16}
+              style={{
+                position: 'absolute',
+                left: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'rgba(245, 235, 221, 0.4)',
+                pointerEvents: 'none',
+              }}
+            />
+            <input
+              type="text"
+              className="search-input"
+              placeholder={ramenFilter === 'veg' ? 'Search veg ramen...' : 'Search non-veg ramen...'}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          {/* ── Ramen Product Grid ── */}
           {filteredRamen.length > 0 ? (
-            <div className="grid-ramen scroll-reveal-stagger">
+            <div className="grid-ramen scroll-reveal-stagger ramen-grid-fade" key={`grid-${ramenFilter}`}>
               {filteredRamen.map((dish) => (
                 <div key={dish.id} className="scroll-reveal">
                   <RamenCard
@@ -1164,18 +1170,6 @@ export default function App() {
           <ArrowUp size={18} />
         </button>
       )}
-
-      {/* ── Responsive Mobile Overrides ── */}
-      <style>{`
-        .hero-inner-grid {
-          grid-template-columns: 1.15fr 0.85fr !important;
-        }
-        @media (max-width: 900px) {
-          .hero-inner-grid { grid-template-columns: 1fr !important; gap: 40px !important; text-align: center !important; }
-          .hero-inner-grid > div { margin: 0 auto !important; }
-          .hero-inner-grid div { justify-content: center !important; }
-        }
-      `}</style>
     </div>
   );
 }

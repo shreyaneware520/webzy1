@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 const STATS = [
@@ -8,22 +8,6 @@ const STATS = [
 ];
 
 export default function Hero({ onExploreClick, onDiscoverClick }) {
-  const bowlRef = useRef(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const move = (e) => {
-      const cx = window.innerWidth / 2;
-      const cy = window.innerHeight / 2;
-      setTilt({
-        x: (e.clientX - cx) / 30,
-        y: (e.clientY - cy) / 30,
-      });
-    };
-    window.addEventListener('mousemove', move);
-    return () => window.removeEventListener('mousemove', move);
-  }, []);
-
   return (
     <section
       style={{
@@ -64,7 +48,7 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 70% 60% at 85% 20%, rgba(158, 22, 43, 0.22) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse 80% 80% at 50% 50%, rgba(158, 22, 43, 0.18) 0%, transparent 70%)',
         }}
       />
       <div
@@ -72,7 +56,7 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 50% 50% at 15% 85%, rgba(201, 162, 74, 0.08) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(201, 162, 74, 0.08) 0%, transparent 65%)',
         }}
       />
       <div
@@ -250,122 +234,125 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
           width: '100%',
           position: 'relative',
           zIndex: 10,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         <div
-          className="hero-inner-grid"
+          className="anim-fade-up"
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr',
-            gap: 48,
+            maxWidth: '950px',
+            width: '100%',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            minHeight: 'calc(100vh - 128px)',
+            justifyContent: 'center',
+            padding: '40px 0',
           }}
         >
-          {/* ── LEFT: Typography & Editorial Details ── */}
-          <div style={{ maxWidth: 580 }} className="anim-fade-up">
-            {/* Sparkle Badge */}
-            <div
+          {/* Sparkle Badge */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 18px',
+              borderRadius: 999,
+              background: 'rgba(58, 12, 21, 0.55)',
+              border: '1px solid rgba(201, 162, 74, 0.35)',
+              backdropFilter: 'blur(8px)',
+              marginBottom: 24,
+            }}
+          >
+            <Sparkles size={13} color="#C9A24A" style={{ animation: 'pulse 2s infinite' }} />
+            <span
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '8px 18px',
-                borderRadius: 999,
-                background: 'rgba(58, 12, 21, 0.55)',
-                border: '1px solid rgba(201, 162, 74, 0.35)',
-                backdropFilter: 'blur(8px)',
-                marginBottom: 24,
-              }}
-            >
-              <Sparkles size={13} color="#C9A24A" style={{ animation: 'pulse 2s infinite' }} />
-              <span
-                style={{
-                  fontSize: 10,
-                  letterSpacing: '0.24em',
-                  fontWeight: 800,
-                  color: 'var(--warm-gold)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Premium Culinary Experience
-              </span>
-            </div>
-
-            {/* Brand Title Subtext */}
-            <div
-              style={{
-                fontSize: 12,
-                letterSpacing: '0.45em',
-                color: 'var(--korean-red)',
+                fontSize: 10,
+                letterSpacing: '0.24em',
                 fontWeight: 800,
+                color: 'var(--warm-gold)',
                 textTransform: 'uppercase',
-                marginBottom: 16,
               }}
             >
-              LITTLE KIMCHI · 리틀 김치
-            </div>
+              Premium Culinary Experience
+            </span>
+          </div>
 
-            {/* Main Editorial Headline */}
-            <h1
-              className="font-serif"
-              style={{
-                fontSize: 'clamp(2.8rem, 7.5vw, 5.2rem)',
-                fontWeight: 900,
-                lineHeight: 1.1,
-                color: 'var(--soft-cream)',
-                marginBottom: 22,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              A BOWL OF <br />
-              <span className="text-outline-glow" style={{ display: 'inline-block' }}>
-                SEOUL.
-              </span>
-            </h1>
+          {/* Brand Title Subtext */}
+          <div
+            style={{
+              fontSize: 12,
+              letterSpacing: '0.45em',
+              color: 'var(--korean-red)',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              marginBottom: 16,
+            }}
+          >
+            LITTLE KIMCHI · 리틀 김치
+          </div>
 
-            {/* Description */}
-            <p
-              style={{
-                fontSize: 16,
-                color: 'rgba(245, 235, 221, 0.75)',
-                lineHeight: 1.7,
-                maxWidth: 460,
-                marginBottom: 40,
-              }}
-            >
-              Bold Korean flavours. Rich, slow-cooked broth. Fresh chewy noodles. Crafted for
-              unforgettable cravings.
-            </p>
+          {/* Main Editorial Headline */}
+          <h1
+            className="font-serif"
+            style={{
+              fontSize: 'clamp(2.8rem, 7.5vw, 5.2rem)',
+              fontWeight: 900,
+              lineHeight: 1.1,
+              color: 'var(--soft-cream)',
+              marginBottom: 22,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            A BOWL OF <br />
+            <span className="text-outline-glow" style={{ display: 'inline-block' }}>
+              SEOUL.
+            </span>
+          </h1>
 
-            {/* CTAs */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 48 }}>
-              <button className="btn-primary" onClick={onExploreClick}>
-                EXPLORE MENU <ArrowRight size={14} />
-              </button>
-              <button className="btn-outline" onClick={onDiscoverClick}>
-                DISCOVER RAMEN
-              </button>
-            </div>
+          {/* Description */}
+          <p
+            style={{
+              fontSize: 'clamp(15px, 2vw, 17px)',
+              color: 'rgba(245, 235, 221, 0.75)',
+              lineHeight: 1.7,
+              maxWidth: 650,
+              margin: '0 auto 40px auto',
+            }}
+          >
+            Bold Korean flavours. Rich, slow-cooked broth. Fresh chewy noodles. Crafted for
+            unforgettable cravings.
+          </p>
 
-            {/* Stats list */}
-            <div
-              style={{
-                display: 'flex',
-                gap: 16,
-                paddingTop: 32,
-                flexWrap: 'wrap',
-              }}
-            >
-              {STATS.map((s, i) => (
-                <div key={s.label} className="glass-pill anim-fade-up" style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
+          {/* CTAs */}
+          <div className="hero-buttons">
+            <button className="btn-primary" onClick={onExploreClick}>
+              EXPLORE MENU <ArrowRight size={14} />
+            </button>
+            <button className="btn-outline" onClick={onDiscoverClick}>
+              DISCOVER RAMEN
+            </button>
+          </div>
+
+          {/* Stats list */}
+          <div className="hero-stats">
+            {STATS.map((s, i) => (
+              <React.Fragment key={s.label}>
+                {i > 0 && <div className="hero-stat-separator" />}
+                <div
+                  className="hero-stat-item anim-fade-up"
+                  style={{ animationDelay: `${0.2 + i * 0.1}s` }}
+                >
                   <div
                     className="font-serif"
                     style={{
-                      fontSize: 18,
+                      fontSize: 'clamp(20px, 2.5vw, 24px)',
                       fontWeight: 800,
                       color: 'var(--warm-gold)',
-                      lineHeight: 1,
+                      lineHeight: 1.1,
+                      marginBottom: 4,
                     }}
                   >
                     {s.value}
@@ -382,140 +369,8 @@ export default function Hero({ onExploreClick, onDiscoverClick }) {
                     {s.label}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── RIGHT: Interactive Ramen Bowl (Overlap visual depth) ── */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              position: 'relative',
-              padding: '20px 0',
-            }}
-          >
-            {/* Ambient gold glow behind food */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 320,
-                height: 320,
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(201, 162, 74, 0.25) 0%, transparent 65%)',
-                filter: 'blur(30px)',
-                pointerEvents: 'none',
-              }}
-            />
-
-            {/* Steam rising particles */}
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="steam"
-                style={{
-                  width: `${12 + i * 4}px`,
-                  height: `${24 + i * 8}px`,
-                  bottom: '30%',
-                  left: `${42 + i * 4.5}%`,
-                  animationDelay: `${i * 1.3}s`,
-                  animationDuration: `${5.5 + i * 0.8}s`,
-                }}
-              />
+              </React.Fragment>
             ))}
-
-            {/* Main Interactive Bowl Container */}
-            <div
-              ref={bowlRef}
-              className="anim-float"
-              style={{
-                width: 'clamp(280px, 38vw, 440px)',
-                height: 'clamp(280px, 38vw, 440px)',
-                position: 'relative',
-                zIndex: 12,
-                transition: 'transform 0.25s ease-out',
-                transform: `perspective(1000px) rotateY(${tilt.x}deg) rotateX(${-tilt.y}deg)`,
-                cursor: 'grab',
-              }}
-            >
-              {/* Soft Drop Shadow under bowl */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '5%',
-                  left: '10%',
-                  right: '10%',
-                  height: 24,
-                  borderRadius: '50%',
-                  background: 'rgba(0, 0, 0, 0.65)',
-                  filter: 'blur(14px)',
-                }}
-              />
-
-              {/* High Resolution Photorealistic Food Image */}
-              <img
-                src="https://images.unsplash.com/photo-1623341214825-9f4f963727da?w=1000&auto=format&fit=crop&q=90"
-                alt="Signature Miso Ramen"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: '50%',
-                  border: '3px solid var(--wine-red)',
-                  boxShadow: '0 30px 80px rgba(0, 0, 0, 0.75), 0 0 50px rgba(158, 22, 43, 0.3)',
-                }}
-              />
-
-              {/* Subtle gloss overlay to mimic light reflections */}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: '50%',
-                  background:
-                    'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.3) 100%)',
-                  pointerEvents: 'none',
-                }}
-              />
-            </div>
-
-            {/* Glowing active label pill beneath bowl */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: -15,
-                background: 'rgba(9, 7, 8, 0.95)',
-                border: '1.5px solid var(--warm-gold)',
-                padding: '10px 20px',
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: '0.12em',
-                color: 'var(--soft-cream)',
-                backdropFilter: 'blur(12px)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5), 0 0 15px rgba(201, 162, 74, 0.25)',
-              }}
-              className="anim-bounce"
-            >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: 'var(--korean-red)',
-                  display: 'inline-block',
-                  animation: 'ping 1.6s ease-in-out infinite',
-                  boxShadow: '0 0 0 4px rgba(158, 22, 43, 0.3)',
-                }}
-              />
-              SIGNATURE MISO RAMEN
-            </div>
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@ export const menuData = {
       description: 'Rich, savory miso-paste broth served with fresh wavy noodles, tender bamboo shoots, wood ear mushrooms, sweet corn, and green onions.',
       ingredients: ['Signature Miso Broth', 'Wavy Wheat Noodles', 'Wood Ear Mushrooms', 'Bamboo Shoots', 'Sweet Corn', 'Garnished Nori', 'Spring Onions'],
       spiceLevel: 1,
-      image: 'https://images.unsplash.com/photo-1623341214825-9f4f963727da?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#C4A276',
         noodleType: 'wavy',
@@ -27,7 +27,7 @@ export const menuData = {
       description: 'A delicate soy-sauce infused clear vegetable broth with noodles, fresh bok choy, marinated tofu, marinated soft bamboo, and seaweed.',
       ingredients: ['Clear Shoyu Broth', 'Classic Ramen Noodles', 'Marinated Tofu', 'Bok Choy', 'Bamboo Shoots', 'Toasted Sesame', 'Nori Strip'],
       spiceLevel: 0,
-      image: 'https://images.unsplash.com/photo-1591814468924-caf7f582924a?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1614563637806-1d0e645e0940?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#664426',
         noodleType: 'thin',
@@ -44,7 +44,7 @@ export const menuData = {
       description: 'A refreshing, zesty light broth brightened with fresh lemon citrus wheel slices, baby spinach, roasted garlic oil, and seasonal microgreens.',
       ingredients: ['Lemon Zest Light Broth', 'Thin Noodles', 'Fresh Lemon Slices', 'Baby Spinach', 'Roasted Garlic Oil', 'Silken Tofu', 'Microgreens'],
       spiceLevel: 0,
-      image: 'https://images.unsplash.com/photo-1547928500-300988147e06?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#E5D799',
         noodleType: 'thin',
@@ -61,7 +61,7 @@ export const menuData = {
       description: 'Fiery, tangy kimchi-infused rich broth topped with stir-fried aged kimchi, green onions, mushrooms, and toasted sesame seeds.',
       ingredients: ['Spicy Kimchi Broth', 'Aged Kimchi', 'Ramen Noodles', 'Shiitake Mushrooms', 'Green Onions', 'Chili Threads', 'Toasted Sesame'],
       spiceLevel: 3,
-      image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1626804475297-41608ea09aeb?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#A3261F',
         noodleType: 'wavy',
@@ -78,7 +78,7 @@ export const menuData = {
       description: 'Indulgent, deeply umami broth flavored with home-made roasted black garlic oil (Mayu), charred broccoli, wood ear mushrooms, and sesame.',
       ingredients: ['Umami Veg Broth', 'Roasted Black Garlic Oil', 'Noodles', 'Charred Broccoli', 'Wood Ear Mushrooms', 'Tofu Cubes', 'Sesame Seeds'],
       spiceLevel: 1,
-      image: 'https://images.unsplash.com/photo-1557872943-16a5ac26437e?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#1F1A17',
         noodleType: 'thin',
@@ -95,7 +95,7 @@ export const menuData = {
       description: 'Ultra-creamy, velvety broth blended with premium Japanese Kewpie mayo, finished with crispy garlic flakes, sweet corn, and baby corn.',
       ingredients: ['Velvety Kewpie Broth', 'Ramen Noodles', 'Crispy Garlic Flakes', 'Sweet Corn', 'Baby Corn', 'Scallions', 'Nori Square'],
       spiceLevel: 0,
-      image: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#EDE6D0',
         noodleType: 'wavy',
@@ -112,7 +112,7 @@ export const menuData = {
       description: 'Warm, aromatic Japanese-style golden curry broth packed with carrots, potatoes, cherry tomatoes, and fried tempura tofu flakes.',
       ingredients: ['Aromatic Golden Curry Broth', 'Thick Chewy Noodles', 'Potato Cubes', 'Carrot Wedges', 'Cherry Tomatoes', 'Tempura Crisps', 'Green Herbs'],
       spiceLevel: 2,
-      image: 'https://images.unsplash.com/photo-1607301401219-4670c5e31557?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#B08A30',
         noodleType: 'thick',
@@ -148,7 +148,7 @@ export const menuData = {
       description: 'Traditional light, soy-sauce infused chicken broth with chewy noodles, slow-cooked chashu, soft-boiled egg, fresh narutomaki (fish cake), and nori.',
       ingredients: ['Chicken Shoyu Broth', 'Chewy Noodles', 'Roasted Chashu Slice', 'Ajitama Soft Egg', 'Narutomaki Fish Cake', 'Nori Strip', 'Scallions'],
       spiceLevel: 0,
-      image: 'https://images.unsplash.com/photo-1591814468924-caf7f582924a?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1614563637806-1d0e645e0940?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#664426',
         noodleType: 'thin',
@@ -165,7 +165,7 @@ export const menuData = {
       description: 'Tangy, double-boiled chicken citrus broth garnished with lemon wheels, tender shredded chicken breast, spinach, soft-boiled egg, and microgreens.',
       ingredients: ['Citrus Chicken Broth', 'Thin Noodles', 'Shredded Chicken', 'Lemon Wheels', 'Ajitama Soft Egg', 'Baby Spinach', 'Microgreens'],
       spiceLevel: 0,
-      image: 'https://images.unsplash.com/photo-1547928500-300988147e06?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#E5D799',
         noodleType: 'thin',
@@ -233,7 +233,7 @@ export const menuData = {
       description: 'Hearty golden Japanese curry broth topped with crispy panko-fried chicken katsu, soft-boiled egg, carrots, potatoes, and pickled red ginger.',
       ingredients: ['Golden Curry Chicken Broth', 'Crispy Chicken Katsu', 'Ajitama Soft Egg', 'Potato Cubes', 'Carrot Wedges', 'Pickled Red Ginger', 'Spring Onion'],
       spiceLevel: 2,
-      image: 'https://images.unsplash.com/photo-1607301401219-4670c5e31557?w=800&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&auto=format&fit=crop&q=80',
       threeConfig: {
         brothColor: '#B08A30',
         noodleType: 'thick',

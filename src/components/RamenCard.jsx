@@ -120,21 +120,50 @@ export default function RamenCard({ dish, onViewDetails, onAddToOrder }) {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'linear-gradient(135deg, #1A080D, #3A0C15)',
-              fontSize: 48,
-              gap: 8,
+              background: 'linear-gradient(135deg, #1A080D, #3A0C15, #1A080D)',
+              gap: 10,
+              padding: 20,
             }}
           >
-            🍜
+            <span style={{ fontSize: 40, lineHeight: 1 }}>🍜</span>
             <span
               style={{
-                fontSize: 10,
-                color: 'rgba(245, 235, 221, 0.45)',
-                letterSpacing: '0.15em',
-                fontWeight: 'bold',
+                fontSize: 8,
+                color: 'var(--warm-gold)',
+                letterSpacing: '0.25em',
+                fontWeight: 800,
+                textTransform: 'uppercase',
               }}
             >
-              PREPARING BOWL
+              LITTLE KIMCHI
+            </span>
+            <span
+              className="font-serif"
+              style={{
+                fontSize: 14,
+                color: 'var(--soft-cream)',
+                fontWeight: 800,
+                textAlign: 'center',
+                lineHeight: 1.3,
+              }}
+            >
+              {dish.name}
+            </span>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                fontSize: 8,
+                fontWeight: 800,
+                letterSpacing: '0.15em',
+                color: isVeg ? '#22c55e' : 'var(--warm-red)',
+                textTransform: 'uppercase',
+              }}
+            >
+              <span className={`food-type-indicator ${isVeg ? 'veg' : 'nonveg'}`}
+                style={{ width: 12, height: 12 }} />
+              {isVeg ? 'VEG' : 'NON-VEG'}
             </span>
           </div>
         ) : (
