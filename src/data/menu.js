@@ -27,7 +27,7 @@ export const menuData = {
       description: 'A delicate soy-sauce infused clear vegetable broth with noodles, fresh bok choy, marinated tofu, marinated soft bamboo, and seaweed.',
       ingredients: ['Clear Shoyu Broth', 'Classic Ramen Noodles', 'Marinated Tofu', 'Bok Choy', 'Bamboo Shoots', 'Toasted Sesame', 'Nori Strip'],
       spiceLevel: 0,
-      image: 'https://images.unsplash.com/photo-1614563637806-1d0e645e0940?w=800&auto=format&fit=crop&q=80',
+      image: '/veg-shoyu.png',
       threeConfig: {
         brothColor: '#664426',
         noodleType: 'thin',
